@@ -1,0 +1,21 @@
+NZ Holiday Road Toll Numbers
+Nat Torkington <nathan@torkington.com>
+http://nathan.torkington.com
+Released under the Artistic license 2.0, 3 Jan 2012
+
+Dependencies:
+ * Perl 5
+ * LWP::Simple
+ * HTML::TableExtract
+ * jqPlot (http://jqplot.com)
+
+01-slurp is the Perl script to visit the NZ Transport website,
+download the HTML table of holiday road fatalities, and extract out
+the deaths number. It emits a CSV file.
+
+02-htmlize produces HTML from that CSV, using jquery and jqPlot.
+
+
+Sample usage:
+  01-slurp | 02-htmlize > out.html
+
