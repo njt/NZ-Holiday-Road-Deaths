@@ -1,5 +1,5 @@
 NZ Holiday Road Toll Numbers
-Nat Torkington <nathan@torkington.com>
+Nat Torkington <nathan@torkington.com> @gnat
 http://nathan.torkington.com
 Released under the Artistic license 2.0, 3 Jan 2012
 
@@ -7,8 +7,11 @@ Builds a web page with a graph of the holiday road toll numbers, with
 moving average.  I wanted to answer the question "is this year's
 figure hideously anomalous, or is it within the usual variation?"
 
-Sample usage: 01-slurp | 02-htmlize > out.html
+Sample usage:
+  01-slurp | 02-htmlize > out.html
 
+See http://nathan.torkington.com/blog/2012/01/02/holiday-road-toll/
+for more information.
 
 Dependencies:
  * Perl 5
