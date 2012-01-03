@@ -3,11 +3,20 @@ Nat Torkington <nathan@torkington.com>
 http://nathan.torkington.com
 Released under the Artistic license 2.0, 3 Jan 2012
 
+Builds a web page with a graph of the holiday road toll numbers, with
+moving average.  I wanted to answer the question "is this year's
+figure hideously anomalous, or is it within the usual variation?"
+
+Sample usage: 01-slurp | 02-htmlize > out.html
+
+
 Dependencies:
  * Perl 5
  * LWP::Simple
  * HTML::TableExtract
- * jqPlot (http://jqplot.com)
+ * jqPlot (http://jqplot.com, included)
+
+Contents:
 
 01-slurp is the Perl script to visit the NZ Transport website,
 download the HTML table of holiday road fatalities, and extract out
@@ -15,7 +24,11 @@ the deaths number. It emits a CSV file.
 
 02-htmlize produces HTML from that CSV, using jquery and jqPlot.
 
+out.html is sample output.
 
-Sample usage:
-  01-slurp | 02-htmlize > out.html
+deaths.csv is sample output of 01-slurp
 
+deaths.numbers is Apple Numbers spreadsheet of the deaths.csv data,
+with chart, as a prototype of what I wanted to create.
+
+js/ contains jQuery and jqPlot
