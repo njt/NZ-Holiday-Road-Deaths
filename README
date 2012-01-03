@@ -4,8 +4,9 @@ http://nathan.torkington.com
 Released under the Artistic license 2.0, 3 Jan 2012
 
 Builds a web page with a graph of the holiday road toll numbers, with
-moving average.  I wanted to answer the question "is this year's
-figure hideously anomalous, or is it within the usual variation?"
+moving average (and the same again, normalized for population change).
+I wanted to answer the question "is this year's figure hideously
+anomalous, or is it within the usual variation?"
 
 Sample usage:
   01-slurp | 02-htmlize > out.html
@@ -14,7 +15,7 @@ See http://nathan.torkington.com/blog/2012/01/02/holiday-road-toll/
 for more information.
 
 Dependencies:
- * Perl 5
+ * Perl 5 with Text::CSV and List::Util
  * LWP::Simple
  * HTML::TableExtract
  * jqPlot (http://jqplot.com, included)
@@ -33,5 +34,11 @@ deaths.csv is sample output of 01-slurp
 
 deaths.numbers is Apple Numbers spreadsheet of the deaths.csv data,
 with chart, as a prototype of what I wanted to create.
+
+population.csv is population history of NZ, taken from
+http://www.stats.govt.nz/browse_for_stats/population/estimates_and_projections/historical-population-tables.aspx
+They provide it in Excel format, so I've extracted the relevant info
+as a CSV. Would love to automate it, but can't be bothered messing
+around with automatedly pulling data from Excel files.
 
 js/ contains jQuery and jqPlot
