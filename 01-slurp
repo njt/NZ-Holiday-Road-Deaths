@@ -1,0 +1,28 @@
+#!/usr/bin/perl -w
+
+use LWP::Simple;
+use HTML::TableExtract;
+use warnings;
+use strict;
+
+my $URL = 'http://www.transport.govt.nz/ourwork/Land/landsafety/Pages/HolidayRoadToll.aspx';
+
+my $html = get($URL)
+   or die "Can't fetch road toll from $URL\n";
+
+# assumption: there's only one table in the doc
+my $te = HTML::TableExtract->new( headers => [ 'Year ', 'Deaths ', 'Fatal crashes ', 'Injured ', 'Injury crashes ', 'Holiday period ' ]);
+$te->parse($html);
+
+die "No table to extract" unless $te->tables;
+
+my($table) = $te->tables;  # pull out the first one only
+
+foreach my $row ($table->rows) {
+  foreach my $elt (@$row) { 
+    $elt ||= '';
+    $elt =~ s/^\s+//; $elt =~ s/\s+$//;
+  }
+  $row->[0] =~ s{/.*}{}; # remove two-digit form of date
+  print "\"$row->[0]\",$row->[1]\n";
+}

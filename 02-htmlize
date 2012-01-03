@@ -1,0 +1,81 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+my @data;
+while (<>) {
+  chomp;
+  my @fields = split /,/, $_;
+  foreach my $f (@fields) {
+    $f =~ s{^"(.*)"$}{$1};
+  }
+  push @data, \@fields;
+}
+
+# calculate moving average
+
+my @avg;
+for (my $i=9; $i < @data; $i++) {
+  my $avg = 0;
+  for (my $j=$i-9; $j <= $i; $j++) {
+    $avg += $data[$j][1];
+  }
+  push @avg, [$data[$i][0], $avg/10];
+}
+
+
+print <<EOHTML
+<html>
+<head>
+<!--[if lt IE 9]><script language="javascript" type="text/javascript" src="js/excanvas.min.js"></script><![endif]-->
+<script language="javascript" type="text/javascript" src="js/jquery-1.7.1.min.js"></script>
+<script language="javascript" type="text/javascript" src="js/jquery.jqplot.min.js"></script>
+<link rel="stylesheet" type="text/css" href="js/jquery.jqplot.css" />
+</head>
+<body>
+
+<div id="chartdiv" style="height:500px;width:600px; "></div>
+
+<script language="javascript" type="text/javascript">
+\$.jqplot('chartdiv',  [ [
+EOHTML
+;
+my @data_html;
+foreach my $row (@data) {
+  push @data_html, "[ " . join("," => @$row) . "]\n";
+}
+print join "," => @data_html;
+
+print <<EOHTML;
+],[
+EOHTML
+@data_html = ();
+foreach my $row (@avg) {
+  push @data_html, "[ " . join("," => @$row) . "]\n";
+}
+print join "," => @data_html;
+
+print <<EOHTML;
+] ],
+
+{ title:'NZ Holiday Road Toll',
+  axes:{yaxis:{min:0, max:40, tickOptions: {formatString: '%d'}, tickInterval: 5},
+        xaxis:{min:1950, max: $data[-1][0]+10, tickInterval: 10 }},
+  series:[{color:'#5FAB78', label: "Deaths/year"},
+          {color:'#ff000', showMarker: false, label: "Moving Average"}],
+  legend: {show: true},
+}
+);
+</script>
+
+<div style="margin-top: 2em">Data from <a
+href="http://www.transport.govt.nz/ourwork/Land/landsafety/Pages/HolidayRoadToll.aspx">NZ
+Transport</a>, graphed with <a
+href="http://jqplot.com">jqPlot</a>. Source available on <a
+href="https://github.com/njt/NZ-Holiday-Road-Deaths">github</a>, by <a
+href="http://nathan.torkington.com">Nat Torkington</a>.
+
+</body>
+</html>
+EOHTML
