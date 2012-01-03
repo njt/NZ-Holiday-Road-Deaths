@@ -2,7 +2,25 @@
 
 use strict;
 use warnings;
+use Text::CSV;
+use List::Util qw(sum);
 
+my $POPULATION_FILE = 'population.csv';
+
+
+# read the population info from a file
+my $csv = Text::CSV->new;
+my %pop;
+open my $fh, "<", $POPULATION_FILE
+    or die "Can't open $POPULATION_FILE: $!\n";
+while (my $row = $csv->getline($fh)) {
+  my $num = $row->[1];
+  $num =~ s/,//g;
+  $pop{$row->[0]} = $num;
+} 
+
+
+# read the raw data
 my @data;
 while (<>) {
   chomp;
@@ -13,16 +31,50 @@ while (<>) {
   push @data, \@fields;
 }
 
-# calculate moving average
-
-my @avg;
-for (my $i=9; $i < @data; $i++) {
-  my $avg = 0;
-  for (my $j=$i-9; $j <= $i; $j++) {
-    $avg += $data[$j][1];
-  }
-  push @avg, [$data[$i][0], $avg/10];
+# calculate normalized percapita
+my @percap;
+my $current_pop = $pop{$data[-1][0]};
+foreach my $row (@data) {
+  my $year = $row->[0];
+  my $normalized =  $row->[1] * $current_pop / $pop{$year};
+  push @percap, [ $year, int($normalized+.5) ];
 }
+
+# calculate moving average
+my @raw_avg;
+my @percap_avg;
+my $raw_sum = sum( map { $_->[1] } (@data[0..8], $data[-1]) );
+my $percap_sum = sum( map { $_->[1] } (@percap[0..8], $percap[-1]) );
+for (my $i=9; $i < @data; $i++) {
+  $raw_sum += $data[$i][1]; $raw_sum -= $data[$i-10][1];
+  $percap_sum += $percap[$i][1]; $percap_sum -= $percap[$i-10][1];
+  push @raw_avg, [$data[$i][0], int($raw_sum/10+5)];
+  push @percap_avg, [$percap[$i][0], int($percap_sum/10+.5)];
+}
+
+my @data_html;
+foreach my $row (@data) {
+  push @data_html, "[ " . join("," => @$row) . "]";
+}
+my $RAW_HTML = join "," => @data_html;
+
+@data_html = ();
+foreach my $row (@raw_avg) {
+  push @data_html, "[ " . join("," => @$row) . "]";
+}
+my $RAW_AVG_HTML = join "," => @data_html;
+
+@data_html = ();
+foreach my $row (@percap) {
+  push @data_html, "[ " . join("," => @$row) . "]";
+}
+my $PERCAP_HTML = join "," => @data_html;
+
+@data_html = ();
+foreach my $row (@percap_avg) {
+  push @data_html, "[ " . join("," => @$row) . "]";
+}
+my $PERCAP_AVG_HTML = join "," => @data_html;
 
 
 print <<EOHTML
@@ -35,29 +87,10 @@ print <<EOHTML
 </head>
 <body>
 
-<div id="chartdiv" style="height:500px;width:600px; "></div>
+<div id="rawchart" style="height:500px;width:600px; "></div>
 
 <script language="javascript" type="text/javascript">
-\$.jqplot('chartdiv',  [ [
-EOHTML
-;
-my @data_html;
-foreach my $row (@data) {
-  push @data_html, "[ " . join("," => @$row) . "]\n";
-}
-print join "," => @data_html;
-
-print <<EOHTML;
-],[
-EOHTML
-@data_html = ();
-foreach my $row (@avg) {
-  push @data_html, "[ " . join("," => @$row) . "]\n";
-}
-print join "," => @data_html;
-
-print <<EOHTML;
-] ],
+\$.jqplot('rawchart',  [ [ $RAW_HTML ], [ $RAW_AVG_HTML ] ],
 
 { title:'NZ Holiday Road Toll',
   axes:{yaxis:{min:0, max:40, tickOptions: {formatString: '%d'}, tickInterval: 5},
@@ -69,9 +102,33 @@ print <<EOHTML;
 );
 </script>
 
+<div style="margin-top:1em;margin-bottom:2em">Raw figures on road
+deaths during the holiday period, with a 10-year moving average.</div>
+
+<div id="percapchart" style="height:500px;width:600px; "></div>
+
+<script language="javascript" type="text/javascript">
+\$.jqplot('percapchart',  [ [ $PERCAP_HTML ], [ $PERCAP_AVG_HTML ] ],
+
+{ title:'Normalised NZ Holiday Road Toll',
+  axes:{yaxis:{min:0, max:60, tickOptions: {formatString: '%d'}, tickInterval: 5},
+        xaxis:{min:1950, max: $data[-1][0]+10, tickInterval: 10 }},
+  series:[{color:'#5FAB78', label: "Deaths/year"},
+          {color:'#ff000', showMarker: false, label: "Moving Average"}],
+  legend: {show: true},
+}
+);
+</script>
+
+<div style="margin-top:1em;margin-bottom:2em">Road deaths during the holiday period and
+a 10-year moving average, normalized to current population.</div>
+
+
 <div style="margin-top: 2em">Data from <a
 href="http://www.transport.govt.nz/ourwork/Land/landsafety/Pages/HolidayRoadToll.aspx">NZ
-Transport</a>, graphed with <a
+Transport</a> and <a
+href="http://www.stats.govt.nz/browse_for_stats/population/estimates_and_projections/historical-population-tables.aspx">Statistics
+New Zealand</a>, graphed with <a
 href="http://jqplot.com">jqPlot</a>. Source available on <a
 href="https://github.com/njt/NZ-Holiday-Road-Deaths">github</a>, by <a
 href="http://nathan.torkington.com">Nat Torkington</a>.
